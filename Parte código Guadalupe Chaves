@@ -1,0 +1,465 @@
+// UniGestion - Avance 2 (archivo unico)
+// 1) Registrar estudiantes y profesores
+// 2) Crear cursos y asignarlos a profesores
+// 3) Matricular estudiantes en cursos
+// Windows Forms, datos en memoria (List<T>). Reemplaza el contenido de Program.cs de un
+// proyecto "Windows Forms App" (.NET Framework o .NET 6+).
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
+
+namespace UniGestion
+{
+    // ===================== MODELOS =====================
+    public class Estudiante
+    {
+        public string Carne { get; set; }
+        public string Nombre { get; set; }
+        public string Correo { get; set; }
+        public string Carrera { get; set; }
+        public int Creditos { get; set; }
+        public override string ToString() { return Carne + " - " + Nombre; }
+    }
+
+    public class Profesor
+    {
+        public string Cedula { get; set; }
+        public string Nombre { get; set; }
+        public string Correo { get; set; }
+        public string Especialidad { get; set; }
+        public override string ToString() { return Cedula + " - " + Nombre; }
+    }
+
+    public class Curso
+    {
+        public string Codigo { get; set; }
+        public string Nombre { get; set; }
+        public int Creditos { get; set; }
+        public string CedulaProfesor { get; set; }
+        public override string ToString() { return Codigo + " - " + Nombre; }
+    }
+
+    public class Matricula
+    {
+        public string Carne { get; set; }
+        public string CodigoCurso { get; set; }
+        public DateTime Fecha { get; set; }
+    }
+
+    // ===================== DATOS Y LOGICA =====================
+    public static class Servicio
+    {
+        public const int CupoMaximo = 30;
+
+        public static List<Estudiante> Estudiantes = new List<Estudiante>();
+        public static List<Profesor> Profesores = new List<Profesor>();
+        public static List<Curso> Cursos = new List<Curso>();
+        public static List<Matricula> Matriculas = new List<Matricula>();
+
+        static bool CorreoValido(string c)
+        {
+            int a = c.IndexOf('@');
+            return a > 0 && c.IndexOf('.', a) > a + 1 && !c.Contains(" ");
+        }
+
+        public static Estudiante BuscarEstudiante(string carne)
+        {
+            return Estudiantes.FirstOrDefault(e => e.Carne.Equals(carne, StringComparison.OrdinalIgnoreCase));
+        }
+        public static Profesor BuscarProfesor(string ced)
+        {
+            return Profesores.FirstOrDefault(p => p.Cedula.Equals(ced, StringComparison.OrdinalIgnoreCase));
+        }
+        public static Curso BuscarCurso(string cod)
+        {
+            return Cursos.FirstOrDefault(c => c.Codigo.Equals(cod, StringComparison.OrdinalIgnoreCase));
+        }
+        public static int Matriculados(string cod)
+        {
+            return Matriculas.Count(m => m.CodigoCurso == cod);
+        }
+
+        // Todos los metodos devuelven null si salio bien, o el mensaje de error.
+        public static string RegistrarEstudiante(string carne, string nombre, string correo, string carrera, string creditosTxt)
+        {
+            if (string.IsNullOrWhiteSpace(carne) || string.IsNullOrWhiteSpace(nombre) ||
+                string.IsNullOrWhiteSpace(correo) || string.IsNullOrWhiteSpace(carrera) ||
+                string.IsNullOrWhiteSpace(creditosTxt))
+                return "Todos los campos son obligatorios.";
+            carne = carne.Trim(); nombre = nombre.Trim(); correo = correo.Trim();
+            if (nombre.Length < 3 || nombre.Length > 60) return "El nombre debe tener entre 3 y 60 caracteres.";
+            if (!CorreoValido(correo)) return "Correo invalido (ejemplo: nombre@correo.com).";
+            int cred;
+            if (!int.TryParse(creditosTxt, out cred) || cred <= 0) return "Los creditos deben ser un entero mayor a cero.";
+            if (BuscarEstudiante(carne) != null) return "Ya existe un estudiante con el carne " + carne + ".";
+            Estudiantes.Add(new Estudiante { Carne = carne, Nombre = nombre, Correo = correo, Carrera = carrera, Creditos = cred });
+            return null;
+        }
+
+        public static string EliminarEstudiante(Estudiante e)
+        {
+            if (e == null) return "Seleccione un estudiante.";
+            Matriculas.RemoveAll(m => m.Carne == e.Carne);
+            Estudiantes.Remove(e);
+            return null;
+        }
+
+        public static string RegistrarProfesor(string ced, string nombre, string correo, string esp)
+        {
+            if (string.IsNullOrWhiteSpace(ced) || string.IsNullOrWhiteSpace(nombre) ||
+                string.IsNullOrWhiteSpace(correo) || string.IsNullOrWhiteSpace(esp))
+                return "Todos los campos son obligatorios.";
+            ced = ced.Trim(); nombre = nombre.Trim(); correo = correo.Trim(); esp = esp.Trim();
+            if (nombre.Length < 3 || nombre.Length > 60) return "El nombre debe tener entre 3 y 60 caracteres.";
+            if (!CorreoValido(correo)) return "Correo invalido (ejemplo: nombre@correo.com).";
+            if (BuscarProfesor(ced) != null) return "Ya existe un profesor con la cedula " + ced + ".";
+            Profesores.Add(new Profesor { Cedula = ced, Nombre = nombre, Correo = correo, Especialidad = esp });
+            return null;
+        }
+
+        public static string EliminarProfesor(Profesor p)
+        {
+            if (p == null) return "Seleccione un profesor.";
+            Curso c = Cursos.FirstOrDefault(x => x.CedulaProfesor == p.Cedula);
+            if (c != null) return "No se puede eliminar: tiene asignado el curso " + c.Nombre + ".";
+            Profesores.Remove(p);
+            return null;
+        }
+
+        public static string CrearCurso(string cod, string nombre, string credTxt, Profesor prof)
+        {
+            if (string.IsNullOrWhiteSpace(cod) || string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(credTxt))
+                return "Codigo, nombre y creditos son obligatorios.";
+            if (prof == null) return "Debe asignar un profesor al curso.";
+            cod = cod.Trim().ToUpper(); nombre = nombre.Trim();
+            int cred;
+            if (!int.TryParse(credTxt, out cred) || cred < 1 || cred > 10) return "Los creditos deben ser un entero entre 1 y 10.";
+            if (BuscarCurso(cod) != null) return "Ya existe un curso con el codigo " + cod + ".";
+            Cursos.Add(new Curso { Codigo = cod, Nombre = nombre, Creditos = cred, CedulaProfesor = prof.Cedula });
+            return null;
+        }
+
+        public static string AsignarProfesor(Curso c, Profesor p)
+        {
+            if (c == null) return "Seleccione un curso de la tabla.";
+            if (p == null) return "Seleccione un profesor.";
+            c.CedulaProfesor = p.Cedula;
+            return null;
+        }
+
+        public static string EliminarCurso(Curso c)
+        {
+            if (c == null) return "Seleccione un curso.";
+            if (Matriculados(c.Codigo) > 0) return "No se puede eliminar: tiene estudiantes matriculados.";
+            Cursos.Remove(c);
+            return null;
+        }
+
+        public static string Matricular(Estudiante e, Curso c)
+        {
+            if (e == null) return "Seleccione un estudiante.";
+            if (c == null) return "Seleccione un curso.";
+            if (Matriculas.Any(m => m.Carne == e.Carne && m.CodigoCurso == c.Codigo))
+                return "El estudiante ya esta matriculado en este curso.";
+            if (Matriculados(c.Codigo) >= CupoMaximo) return "El curso alcanzo el cupo maximo (" + CupoMaximo + ").";
+            Matriculas.Add(new Matricula { Carne = e.Carne, CodigoCurso = c.Codigo, Fecha = DateTime.Now });
+            return null;
+        }
+
+        public static string CancelarMatricula(string carne, string codigo)
+        {
+            Matricula m = Matriculas.FirstOrDefault(x => x.Carne == carne && x.CodigoCurso == codigo);
+            if (m == null) return "Seleccione una matricula de la tabla.";
+            Matriculas.Remove(m);
+            return null;
+        }
+    }
+
+    // ===================== VISTA (ventana unica con pestanas) =====================
+    public class FormPrincipal : Form
+    {
+        // Estudiantes
+        TextBox txtCarne, txtNomEst, txtCorreoEst, txtCredEst;
+        ComboBox cmbCarrera;
+        DataGridView gridEst;
+
+        // Profesores
+        TextBox txtCedula, txtNomProf, txtCorreoProf, txtEsp;
+        DataGridView gridProf;
+
+        // Cursos
+        TextBox txtCodigo, txtNomCurso, txtCredCurso;
+        ComboBox cmbProfCurso;
+        DataGridView gridCursos;
+
+        // Matricula
+        ComboBox cmbEstMat, cmbCursoMat;
+        DataGridView gridMat;
+        Label lblCupo;
+
+        public FormPrincipal()
+        {
+            Text = "UniGestion - Avance 2";
+            Width = 860; Height = 600;
+            StartPosition = FormStartPosition.CenterScreen;
+
+            TabControl tabs = new TabControl { Dock = DockStyle.Fill };
+            TabPage tEst = new TabPage("Estudiantes");
+            TabPage tProf = new TabPage("Profesores");
+            TabPage tCur = new TabPage("Cursos");
+            TabPage tMat = new TabPage("Matricula");
+            tabs.TabPages.AddRange(new[] { tEst, tProf, tCur, tMat });
+            Controls.Add(tabs);
+
+            ConstruirEstudiantes(tEst);
+            ConstruirProfesores(tProf);
+            ConstruirCursos(tCur);
+            ConstruirMatricula(tMat);
+
+            // Al cambiar de pestana se recargan combos y tablas
+            tabs.SelectedIndexChanged += (s, e) => { CargarCombos(); RefrescarTodo(); };
+            CargarCombos();
+            RefrescarTodo();
+        }
+
+        // ---------- helpers de UI ----------
+        static void Etiqueta(Control p, string t, int x, int y)
+        { p.Controls.Add(new Label { Text = t, Left = x, Top = y + 3, AutoSize = true }); }
+
+        static TextBox Caja(Control p, int x, int y, int w)
+        { TextBox t = new TextBox { Left = x, Top = y, Width = w }; p.Controls.Add(t); return t; }
+
+        static ComboBox Combo(Control p, int x, int y, int w)
+        {
+            ComboBox c = new ComboBox { Left = x, Top = y, Width = w, DropDownStyle = ComboBoxStyle.DropDownList };
+            p.Controls.Add(c); return c;
+        }
+
+        static void Boton(Control p, string t, int x, int y, EventHandler h, int w)
+        {
+            Button b = new Button { Text = t, Left = x, Top = y, Width = w, Height = 30 };
+            b.Click += h; p.Controls.Add(b);
+        }
+
+        static DataGridView Tabla(Control p, int x, int y, int w, int h)
+        {
+            DataGridView g = new DataGridView
+            {
+                Left = x, Top = y, Width = w, Height = h,
+                ReadOnly = true, AllowUserToAddRows = false, MultiSelect = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                RowHeadersVisible = false,
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            };
+            p.Controls.Add(g); return g;
+        }
+
+        static void Error(string m) { MessageBox.Show(m, "Validacion", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        static void Info(string m) { MessageBox.Show(m, "UniGestion", MessageBoxButtons.OK, MessageBoxIcon.Information); }
+        static bool Confirmar(string m) { return MessageBox.Show(m, "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes; }
+
+        static string Celda(DataGridView g, string col)
+        { return g.CurrentRow == null ? null : Convert.ToString(g.CurrentRow.Cells[col].Value); }
+
+        // ---------- 1a) Estudiantes ----------
+        void ConstruirEstudiantes(TabPage t)
+        {
+            Etiqueta(t, "Carne:", 20, 20);    txtCarne = Caja(t, 110, 20, 200);
+            Etiqueta(t, "Nombre:", 20, 55);   txtNomEst = Caja(t, 110, 55, 300);
+            Etiqueta(t, "Correo:", 20, 90);   txtCorreoEst = Caja(t, 110, 90, 300);
+            Etiqueta(t, "Carrera:", 20, 125); cmbCarrera = Combo(t, 110, 125, 300);
+            Etiqueta(t, "Creditos:", 20, 160); txtCredEst = Caja(t, 110, 160, 80);
+            cmbCarrera.Items.AddRange(new object[] {
+                "Ingenieria en Sistemas", "Administracion de Empresas", "Derecho",
+                "Contaduria", "Psicologia", "Educacion" });
+            cmbCarrera.SelectedIndex = 0;
+
+            Boton(t, "Guardar", 450, 20, (s, e) =>
+            {
+                string err = Servicio.RegistrarEstudiante(txtCarne.Text, txtNomEst.Text, txtCorreoEst.Text,
+                    cmbCarrera.SelectedItem.ToString(), txtCredEst.Text);
+                if (err != null) { Error(err); return; }
+                Info("Estudiante registrado correctamente.");
+                txtCarne.Clear(); txtNomEst.Clear(); txtCorreoEst.Clear(); txtCredEst.Clear();
+                RefrescarTodo();
+            }, 110);
+
+            Boton(t, "Eliminar", 450, 60, (s, e) =>
+            {
+                Estudiante est = Servicio.BuscarEstudiante(Celda(gridEst, "Carne") ?? "");
+                if (est == null) { Error("Seleccione un estudiante de la tabla."); return; }
+                if (!Confirmar("Eliminar a " + est.Nombre + " y sus matriculas?")) return;
+                string err = Servicio.EliminarEstudiante(est);
+                if (err != null) Error(err);
+                RefrescarTodo();
+            }, 110);
+
+            gridEst = Tabla(t, 20, 205, 800, 330);
+        }
+
+        // ---------- 1b) Profesores ----------
+        void ConstruirProfesores(TabPage t)
+        {
+            Etiqueta(t, "Cedula:", 20, 20);       txtCedula = Caja(t, 120, 20, 200);
+            Etiqueta(t, "Nombre:", 20, 55);       txtNomProf = Caja(t, 120, 55, 300);
+            Etiqueta(t, "Correo:", 20, 90);       txtCorreoProf = Caja(t, 120, 90, 300);
+            Etiqueta(t, "Especialidad:", 20, 125); txtEsp = Caja(t, 120, 125, 300);
+
+            Boton(t, "Guardar", 460, 20, (s, e) =>
+            {
+                string err = Servicio.RegistrarProfesor(txtCedula.Text, txtNomProf.Text, txtCorreoProf.Text, txtEsp.Text);
+                if (err != null) { Error(err); return; }
+                Info("Profesor registrado correctamente.");
+                txtCedula.Clear(); txtNomProf.Clear(); txtCorreoProf.Clear(); txtEsp.Clear();
+                RefrescarTodo(); CargarCombos();
+            }, 110);
+
+            Boton(t, "Eliminar", 460, 60, (s, e) =>
+            {
+                Profesor p = Servicio.BuscarProfesor(Celda(gridProf, "Cedula") ?? "");
+                if (p == null) { Error("Seleccione un profesor de la tabla."); return; }
+                if (!Confirmar("Eliminar al profesor " + p.Nombre + "?")) return;
+                string err = Servicio.EliminarProfesor(p);
+                if (err != null) Error(err);
+                RefrescarTodo(); CargarCombos();
+            }, 110);
+
+            gridProf = Tabla(t, 20, 175, 800, 360);
+        }
+
+        // ---------- 2) Cursos y asignacion de profesores ----------
+        void ConstruirCursos(TabPage t)
+        {
+            Etiqueta(t, "Codigo:", 20, 20);    txtCodigo = Caja(t, 110, 20, 120);
+            Etiqueta(t, "Nombre:", 20, 55);    txtNomCurso = Caja(t, 110, 55, 300);
+            Etiqueta(t, "Creditos:", 20, 90);  txtCredCurso = Caja(t, 110, 90, 80);
+            Etiqueta(t, "Profesor:", 20, 125); cmbProfCurso = Combo(t, 110, 125, 300);
+
+            Boton(t, "Crear curso", 450, 20, (s, e) =>
+            {
+                string err = Servicio.CrearCurso(txtCodigo.Text, txtNomCurso.Text, txtCredCurso.Text,
+                    cmbProfCurso.SelectedItem as Profesor);
+                if (err != null) { Error(err); return; }
+                Info("Curso creado y asignado correctamente.");
+                txtCodigo.Clear(); txtNomCurso.Clear(); txtCredCurso.Clear();
+                RefrescarTodo(); CargarCombos();
+            }, 150);
+
+            Boton(t, "Cambiar profesor", 450, 60, (s, e) =>
+            {
+                Curso c = Servicio.BuscarCurso(Celda(gridCursos, "Codigo") ?? "");
+                string err = Servicio.AsignarProfesor(c, cmbProfCurso.SelectedItem as Profesor);
+                if (err != null) { Error(err); return; }
+                Info("Profesor asignado al curso.");
+                RefrescarTodo();
+            }, 150);
+
+            Boton(t, "Eliminar curso", 450, 100, (s, e) =>
+            {
+                Curso c = Servicio.BuscarCurso(Celda(gridCursos, "Codigo") ?? "");
+                if (c == null) { Error("Seleccione un curso de la tabla."); return; }
+                if (!Confirmar("Eliminar el curso " + c.Nombre + "?")) return;
+                string err = Servicio.EliminarCurso(c);
+                if (err != null) Error(err);
+                RefrescarTodo(); CargarCombos();
+            }, 150);
+
+            gridCursos = Tabla(t, 20, 175, 800, 360);
+        }
+
+        // ---------- 3) Matricula ----------
+        void ConstruirMatricula(TabPage t)
+        {
+            Etiqueta(t, "Estudiante:", 20, 20); cmbEstMat = Combo(t, 110, 20, 330);
+            Etiqueta(t, "Curso:", 20, 60);      cmbCursoMat = Combo(t, 110, 60, 330);
+            lblCupo = new Label { Left = 20, Top = 100, AutoSize = true };
+            t.Controls.Add(lblCupo);
+            cmbCursoMat.SelectedIndexChanged += (s, e) => MostrarCupo();
+
+            Boton(t, "Matricular", 470, 20, (s, e) =>
+            {
+                string err = Servicio.Matricular(cmbEstMat.SelectedItem as Estudiante, cmbCursoMat.SelectedItem as Curso);
+                if (err != null) { Error(err); return; }
+                Info("Matricula realizada correctamente.");
+                RefrescarTodo(); MostrarCupo();
+            }, 150);
+
+            Boton(t, "Cancelar matricula", 470, 60, (s, e) =>
+            {
+                string carne = Celda(gridMat, "Carne"), cod = Celda(gridMat, "Codigo");
+                if (carne == null) { Error("Seleccione una matricula de la tabla."); return; }
+                if (!Confirmar("Cancelar la matricula seleccionada?")) return;
+                string err = Servicio.CancelarMatricula(carne, cod);
+                if (err != null) Error(err);
+                RefrescarTodo(); MostrarCupo();
+            }, 150);
+
+            gridMat = Tabla(t, 20, 135, 800, 400);
+        }
+
+        // ---------- carga de datos ----------
+        void CargarCombos()
+        {
+            cmbProfCurso.DataSource = Servicio.Profesores.ToList();
+            cmbEstMat.DataSource = Servicio.Estudiantes.ToList();
+            cmbCursoMat.DataSource = Servicio.Cursos.ToList();
+            MostrarCupo();
+        }
+
+        void MostrarCupo()
+        {
+            Curso c = cmbCursoMat.SelectedItem as Curso;
+            lblCupo.Text = c == null ? "No hay cursos creados."
+                : "Cupo del curso: " + Servicio.Matriculados(c.Codigo) + " / " + Servicio.CupoMaximo;
+        }
+
+        void RefrescarTodo()
+        {
+            gridEst.DataSource = Servicio.Estudiantes
+                .Select(x => new { x.Carne, x.Nombre, x.Correo, x.Carrera, x.Creditos }).ToList();
+
+            gridProf.DataSource = Servicio.Profesores
+                .Select(p => new { p.Cedula, p.Nombre, p.Correo, p.Especialidad }).ToList();
+
+            gridCursos.DataSource = Servicio.Cursos.Select(c =>
+            {
+                Profesor p = Servicio.BuscarProfesor(c.CedulaProfesor);
+                return new
+                {
+                    c.Codigo, c.Nombre, c.Creditos,
+                    Profesor = p != null ? p.Nombre : "(sin asignar)",
+                    Matriculados = Servicio.Matriculados(c.Codigo)
+                };
+            }).ToList();
+
+            gridMat.DataSource = Servicio.Matriculas.Select(m =>
+            {
+                Estudiante e = Servicio.BuscarEstudiante(m.Carne);
+                Curso c = Servicio.BuscarCurso(m.CodigoCurso);
+                return new
+                {
+                    m.Carne,
+                    Estudiante = e != null ? e.Nombre : "",
+                    Codigo = m.CodigoCurso,
+                    Curso = c != null ? c.Nombre : "",
+                    Fecha = m.Fecha.ToString("dd/MM/yyyy HH:mm")
+                };
+            }).ToList();
+        }
+    }
+
+    // ===================== PUNTO DE ENTRADA =====================
+    static class Program
+    {
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new FormPrincipal());
+        }
+    }
+}

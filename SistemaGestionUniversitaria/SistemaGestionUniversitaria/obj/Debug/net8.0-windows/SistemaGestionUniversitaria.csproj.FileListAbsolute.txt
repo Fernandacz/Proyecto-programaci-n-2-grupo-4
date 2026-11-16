@@ -1,0 +1,17 @@
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\bin\Debug\net8.0-windows\SistemaGestionUniversitaria.exe
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\bin\Debug\net8.0-windows\SistemaGestionUniversitaria.deps.json
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\bin\Debug\net8.0-windows\SistemaGestionUniversitaria.runtimeconfig.json
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\bin\Debug\net8.0-windows\SistemaGestionUniversitaria.dll
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\bin\Debug\net8.0-windows\SistemaGestionUniversitaria.pdb
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaGestionUniversitaria.Form1.resources
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaGestionUniversitaria.csproj.GenerateResource.cache
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaGestionUniversitaria.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaGestionUniversitaria.AssemblyInfoInputs.cache
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaGestionUniversitaria.AssemblyInfo.cs
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaGestionUniversitaria.csproj.CoreCompileInputs.cache
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaGestionUniversitaria.dll
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\refint\SistemaGestionUniversitaria.dll
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaGestionUniversitaria.pdb
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaGestionUniversitaria.genruntimeconfig.cache
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\ref\SistemaGestionUniversitaria.dll
+C:\Users\Guadalupe Chaves\Downloads\SistemaGestionUniversitaria\SistemaGestionUniversitaria\obj\Debug\net8.0-windows\SistemaG.AC6D850A.Up2Date

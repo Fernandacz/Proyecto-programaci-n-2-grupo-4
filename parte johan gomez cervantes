@@ -1,0 +1,430 @@
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace SistemaGestionAcademica
+{
+    class Estudiante
+    {
+        public string Cedula;
+        public string Nombre;
+    }
+
+    class Curso
+    {
+        public string Codigo;
+        public string Nombre;
+        public bool Activo;
+    }
+
+    class Matricula
+    {
+        public string CedulaEstudiante;
+        public string CodigoCurso;
+        public List<double> Notas = new List<double>();
+    }
+
+    class Program
+    {
+        static List<Estudiante> estudiantes = new List<Estudiante>();
+        static List<Curso> cursos = new List<Curso>();
+        static List<Matricula> matriculas = new List<Matricula>();
+
+        static void Main(string[] args)
+        {
+            int opcion;
+
+            do
+            {
+                Console.Clear();
+                Console.WriteLine("==================================");
+                Console.WriteLine("     SISTEMA DE GESTION ACADEMICA");
+                Console.WriteLine("==================================");
+                Console.WriteLine("1. Registrar estudiante");
+                Console.WriteLine("2. Registrar curso");
+                Console.WriteLine("3. Matricular estudiante");
+                Console.WriteLine("4. Registrar calificaciones");
+                Console.WriteLine("5. Consultar promedio del estudiante");
+                Console.WriteLine("6. Consultar promedio del curso");
+                Console.WriteLine("7. Consultar informacion academica");
+                Console.WriteLine("8. Mostrar cursos activos");
+                Console.WriteLine("9. Salir");
+                Console.WriteLine("==================================");
+
+                opcion = LeerEntero("Seleccione una opcion: ");
+
+                switch (opcion)
+                {
+                    case 1:
+                        RegistrarEstudiante();
+                        break;
+
+                    case 2:
+                        RegistrarCurso();
+                        break;
+
+                    case 3:
+                        MatricularEstudiante();
+                        break;
+
+                    case 4:
+                        RegistrarNotas();
+                        break;
+
+                    case 5:
+                        PromedioEstudiante();
+                        break;
+
+                    case 6:
+                        PromedioCurso();
+                        break;
+
+                    case 7:
+                        ConsultarInformacion();
+                        break;
+
+                    case 8:
+                        MostrarCursosActivos();
+                        break;
+
+                    case 9:
+                        Console.WriteLine("Saliendo del sistema...");
+                        break;
+
+                    default:
+                        Console.WriteLine("Opcion incorrecta.");
+                        break;
+                }
+
+                if (opcion != 9)
+                {
+                    Console.WriteLine("\nPresione una tecla para continuar...");
+                    Console.ReadKey();
+                }
+
+            } while (opcion != 9);
+        }
+
+        // REGISTRAR ESTUDIANTE
+        static void RegistrarEstudiante()
+        {
+            Console.WriteLine("\n--- REGISTRO DE ESTUDIANTE ---");
+
+            Console.Write("Ingrese la cedula: ");
+            string cedula = Console.ReadLine();
+
+            if (estudiantes.Any(e => e.Cedula == cedula))
+            {
+                Console.WriteLine("El estudiante ya esta registrado.");
+                return;
+            }
+
+            Console.Write("Ingrese el nombre: ");
+            string nombre = Console.ReadLine();
+
+            estudiantes.Add(new Estudiante
+            {
+                Cedula = cedula,
+                Nombre = nombre
+            });
+
+            Console.WriteLine("Estudiante registrado correctamente.");
+        }
+
+        // REGISTRAR CURSO
+        static void RegistrarCurso()
+        {
+            Console.WriteLine("\n--- REGISTRO DE CURSO ---");
+
+            Console.Write("Ingrese el codigo del curso: ");
+            string codigo = Console.ReadLine();
+
+            if (cursos.Any(c => c.Codigo == codigo))
+            {
+                Console.WriteLine("El curso ya existe.");
+                return;
+            }
+
+            Console.Write("Ingrese el nombre del curso: ");
+            string nombre = Console.ReadLine();
+
+            cursos.Add(new Curso
+            {
+                Codigo = codigo,
+                Nombre = nombre,
+                Activo = true
+            });
+
+            Console.WriteLine("Curso registrado correctamente.");
+        }
+
+        // MATRICULAR ESTUDIANTE
+        static void MatricularEstudiante()
+        {
+            Console.WriteLine("\n--- MATRICULA DE ESTUDIANTE ---");
+
+            Console.Write("Ingrese la cedula del estudiante: ");
+            string cedula = Console.ReadLine();
+
+            Estudiante estudiante = estudiantes
+                .FirstOrDefault(e => e.Cedula == cedula);
+
+            if (estudiante == null)
+            {
+                Console.WriteLine("Estudiante no encontrado.");
+                return;
+            }
+
+            Console.Write("Ingrese el codigo del curso: ");
+            string codigo = Console.ReadLine();
+
+            Curso curso = cursos.FirstOrDefault(c => c.Codigo == codigo);
+
+            if (curso == null || !curso.Activo)
+            {
+                Console.WriteLine("Curso no encontrado o inactivo.");
+                return;
+            }
+
+            bool existe = matriculas.Any(m =>
+                m.CedulaEstudiante == cedula &&
+                m.CodigoCurso == codigo);
+
+            if (existe)
+            {
+                Console.WriteLine("El estudiante ya esta matriculado en este curso.");
+                return;
+            }
+
+            matriculas.Add(new Matricula
+            {
+                CedulaEstudiante = cedula,
+                CodigoCurso = codigo
+            });
+
+            Console.WriteLine("Matricula realizada correctamente.");
+        }
+
+        // REGISTRAR CALIFICACIONES
+        static void RegistrarNotas()
+        {
+            Console.WriteLine("\n--- REGISTRO DE CALIFICACIONES ---");
+
+            Console.Write("Ingrese la cedula del estudiante: ");
+            string cedula = Console.ReadLine();
+
+            Console.Write("Ingrese el codigo del curso: ");
+            string codigo = Console.ReadLine();
+
+            Matricula matricula = matriculas.FirstOrDefault(m =>
+                m.CedulaEstudiante == cedula &&
+                m.CodigoCurso == codigo);
+
+            if (matricula == null)
+            {
+                Console.WriteLine("No existe una matricula para estos datos.");
+                return;
+            }
+
+            double nota;
+
+            do
+            {
+                nota = LeerDecimal("Ingrese la calificacion (0-100): ");
+
+                if (nota < 0 || nota > 100)
+                {
+                    Console.WriteLine("La nota debe estar entre 0 y 100.");
+                }
+
+            } while (nota < 0 || nota > 100);
+
+            matricula.Notas.Add(nota);
+
+            Console.WriteLine("Calificacion registrada correctamente.");
+        }
+
+        // PROMEDIO DEL ESTUDIANTE
+        static void PromedioEstudiante()
+        {
+            Console.WriteLine("\n--- PROMEDIO DEL ESTUDIANTE ---");
+
+            Console.Write("Ingrese la cedula: ");
+            string cedula = Console.ReadLine();
+
+            Estudiante estudiante = estudiantes
+                .FirstOrDefault(e => e.Cedula == cedula);
+
+            if (estudiante == null)
+            {
+                Console.WriteLine("Estudiante no encontrado.");
+                return;
+            }
+
+            List<double> notas = matriculas
+                .Where(m => m.CedulaEstudiante == cedula)
+                .SelectMany(m => m.Notas)
+                .ToList();
+
+            Console.WriteLine("Estudiante: " + estudiante.Nombre);
+
+            if (notas.Count == 0)
+            {
+                Console.WriteLine("El estudiante no tiene calificaciones.");
+                return;
+            }
+
+            double promedio = notas.Average();
+
+            Console.WriteLine("Promedio general: " + promedio.ToString("F2"));
+        }
+
+        // PROMEDIO DEL CURSO
+        static void PromedioCurso()
+        {
+            Console.WriteLine("\n--- PROMEDIO DEL CURSO ---");
+
+            Console.Write("Ingrese el codigo del curso: ");
+            string codigo = Console.ReadLine();
+
+            Curso curso = cursos.FirstOrDefault(c => c.Codigo == codigo);
+
+            if (curso == null)
+            {
+                Console.WriteLine("Curso no encontrado.");
+                return;
+            }
+
+            List<double> notas = matriculas
+                .Where(m => m.CodigoCurso == codigo)
+                .SelectMany(m => m.Notas)
+                .ToList();
+
+            Console.WriteLine("Curso: " + curso.Nombre);
+
+            if (notas.Count == 0)
+            {
+                Console.WriteLine("El curso no tiene calificaciones registradas.");
+                return;
+            }
+
+            double promedio = notas.Average();
+
+            Console.WriteLine("Promedio general del curso: " +
+                              promedio.ToString("F2"));
+        }
+
+        // CONSULTAR INFORMACION ACADEMICA
+        static void ConsultarInformacion()
+        {
+            Console.WriteLine("\n--- INFORMACION ACADEMICA ---");
+
+            Console.Write("Ingrese la cedula del estudiante: ");
+            string cedula = Console.ReadLine();
+
+            Estudiante estudiante = estudiantes
+                .FirstOrDefault(e => e.Cedula == cedula);
+
+            if (estudiante == null)
+            {
+                Console.WriteLine("Estudiante no encontrado.");
+                return;
+            }
+
+            Console.WriteLine("\nEstudiante: " + estudiante.Nombre);
+            Console.WriteLine("Cedula: " + estudiante.Cedula);
+
+            var cursosMatriculados = matriculas
+                .Where(m => m.CedulaEstudiante == cedula)
+                .ToList();
+
+            Console.WriteLine("\n--- CURSOS MATRICULADOS ---");
+
+            if (cursosMatriculados.Count == 0)
+            {
+                Console.WriteLine("No tiene cursos matriculados.");
+            }
+
+            foreach (Matricula m in cursosMatriculados)
+            {
+                Curso curso = cursos.FirstOrDefault(c =>
+                    c.Codigo == m.CodigoCurso);
+
+                if (curso != null)
+                {
+                    Console.WriteLine("\nCurso: " + curso.Nombre);
+                    Console.WriteLine("Codigo: " + curso.Codigo);
+                    Console.WriteLine("Estado: " +
+                        (curso.Activo ? "Activo" : "Inactivo"));
+
+                    Console.WriteLine("Notas:");
+                    
+                    if (m.Notas.Count == 0)
+                    {
+                        Console.WriteLine("Sin calificaciones.");
+                    }
+                    else
+                    {
+                        foreach (double nota in m.Notas)
+                        {
+                            Console.WriteLine("- " + nota);
+                        }
+
+                        Console.WriteLine("Promedio del curso: " +
+                            m.Notas.Average().ToString("F2"));
+                    }
+                }
+            }
+        }
+
+        // MOSTRAR CURSOS ACTIVOS
+        static void MostrarCursosActivos()
+        {
+            Console.WriteLine("\n--- CURSOS ACTIVOS ---");
+
+            var activos = cursos.Where(c => c.Activo).ToList();
+
+            if (activos.Count == 0)
+            {
+                Console.WriteLine("No hay cursos activos.");
+                return;
+            }
+
+            foreach (Curso curso in activos)
+            {
+                Console.WriteLine("Codigo: " + curso.Codigo);
+                Console.WriteLine("Nombre: " + curso.Nombre);
+                Console.WriteLine("-------------------------");
+            }
+        }
+
+        // VALIDAR NUMEROS ENTEROS
+        static int LeerEntero(string mensaje)
+        {
+            int valor;
+
+            Console.Write(mensaje);
+
+            while (!int.TryParse(Console.ReadLine(), out valor))
+            {
+                Console.Write("Ingrese un numero valido: ");
+            }
+
+            return valor;
+        }
+
+        // VALIDAR NUMEROS DECIMALES
+        static double LeerDecimal(string mensaje)
+        {
+            double valor;
+
+            Console.Write(mensaje);
+
+            while (!double.TryParse(Console.ReadLine(), out valor))
+            {
+                Console.Write("Ingrese un numero valido: ");
+            }
+
+            return valor;
+        }
